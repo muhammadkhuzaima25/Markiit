@@ -25,11 +25,9 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       if (userData?.role) localStorage.setItem('userRole', userData.role);
     } catch {
-      if (localStorage.getItem('accessToken') === token) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('userRole');
-        setUser(null);
-      }
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userRole');
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -39,8 +37,8 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
-  const login = async (email, password, config) => {
-    const { data } = await authAPI.login({ email, password }, config);
+  const login = async (email, password) => {
+    const { data } = await authAPI.login({ email, password });
     localStorage.setItem('accessToken', data.accessToken);
     if (data.user?.role) localStorage.setItem('userRole', data.user.role);
     setUser(data.user);
@@ -56,10 +54,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await authAPI.logout();
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('userRole');
-    setUser(null);
+    try {
+      await authAPI.logout();
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userRole');
+      setUser(null);
+    }
   };
 
   const updateUser = (userData) => {
