@@ -3,10 +3,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
 import { v2 as cloudinary } from 'cloudinary';
-import rateLimit from 'express-rate-limit';
 import serverless from 'serverless-http';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
@@ -33,8 +30,6 @@ cloudinary.config({
 const app = express();
 
 app.set('trust proxy', 1);
-
-const isVercel = process.env.VERCEL === '1';
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -66,23 +61,22 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), authRoutes);
-app.use('/api/users', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), userRoutes);
-app.use('/api/products', rateLimit({ windowMs: 60 * 60 * 1000, max: 20 }), productRoutes);
-app.use('/api/services', rateLimit({ windowMs: 60 * 60 * 1000, max: 20 }), serviceRoutes);
-app.use('/api/bookings', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), bookingRoutes);
-app.use('/api/reviews', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), reviewRoutes);
-app.use('/api/messages', rateLimit({ windowMs: 60 * 1000, max: 30 }), messageRoutes);
-app.use('/api/notifications', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), notificationRoutes);
-app.use('/api/admin', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), adminRoutes);
-app.use('/api/listings/nearby', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), nearbyRoutes);
-app.use('/api/reports', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), reportRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/listings/nearby', nearbyRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    environment: isVercel ? 'vercel' : 'local'
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
