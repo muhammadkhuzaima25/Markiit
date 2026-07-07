@@ -49,9 +49,12 @@ connectDB = async () => {
 
 connectDB();
 
+// Always initialize the io slot on app, even in serverless mode,
+// so req.app.get('io') never throws when code elsewhere expects it.
+app.set('io', null);
+
 if (!isVercel) {
   server = createServer(app);
-  app.set('io', null);
 
   const io = new Server(server, {
     cors: {
@@ -75,13 +78,6 @@ if (!isVercel) {
 
   process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err.message);
-  });
-
-  const PORT = process.env.PORT || 5000;
-  server.timeout = 300000;
-  server.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📡 API Status: ${dbConnected ? 'Database Connected ✅' : 'Database Disconnected ❌'}`);
   });
 }
 
@@ -153,7 +149,28 @@ app.get('/api/health', (req, res) => {
   res.json(status);
 });
 
+// Catch-all 404 handler — registered AFTER all real routes above,
+// and BEFORE the error handler. Turns a silent/blank 404 into a
+// clear JSON message telling you exactly which method + path was not found,
+// which is the fastest way to spot a frontend/backend URL mismatch.
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
 app.use(errorHandler);
+
+// Only start listening on a real port when NOT running on Vercel.
+if (!isVercel) {
+  const PORT = process.env.PORT || 5000;
+  server.timeout = 300000;
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📡 API Status: ${dbConnected ? 'Database Connected ✅' : 'Database Disconnected ❌'}`);
+  });
+}
 
 export const handler = serverless(app);
 export default app;
