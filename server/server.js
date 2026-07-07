@@ -34,11 +34,13 @@ const isVercel = process.env.VERCEL === '1';
 let dbConnected = false;
 let server;
 
-// Track database connection status
-const originalConnectDB = connectDB;
-connectDB = async () => {
+// Track database connection status.
+// NOTE: `connectDB` is an imported binding — imports are read-only,
+// so it can never be reassigned (that caused the "Assignment to constant
+// variable" crash on Vercel). Wrap it in a new function instead.
+const initDB = async () => {
   try {
-    await originalConnectDB();
+    await connectDB();
     dbConnected = true;
     console.log('✅ Database connected successfully');
   } catch (error) {
@@ -47,7 +49,7 @@ connectDB = async () => {
   }
 };
 
-connectDB();
+initDB();
 
 // Always initialize the io slot on app, even in serverless mode,
 // so req.app.get('io') never throws when code elsewhere expects it.
