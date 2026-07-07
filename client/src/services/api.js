@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://markiitbackend.vercel.app/api';
+
 const getAuthRedirectUrl = () => {
   const role = localStorage.getItem('userRole');
   if (role === 'admin') return '/system-access-portal';
@@ -16,7 +18,7 @@ const handleAuthFailure = () => {
 };
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: BASE_URL,
   withCredentials: true,
 });
 
@@ -32,23 +34,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && originalRequest.skipAuthRedirect) {
-      return Promise.reject(error);
-    }
-    if (error.response?.status === 403 && !originalRequest.url?.includes('/auth/')) {
-      const message = error.response?.data?.message || 'Your account has been restricted.';
-      if (message.includes('restricted')) {
-        handleAuthFailure();
-        return Promise.reject(error);
-      }
-    }
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh-token')) {
-      if (isRefreshing) {
-        handleAuthFailure();
-        return Promise.reject(error);
-      }
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/')) {
+      if (isRefreshing) return Promise.reject(error);
+
       originalRequest._retry = true;
       isRefreshing = true;
+
       try {
         const { data } = await api.post('/auth/refresh-token');
         localStorage.setItem('accessToken', data.accessToken);
@@ -61,17 +52,12 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-    if (originalRequest.url?.includes('/auth/refresh-token')) {
-      handleAuthFailure();
-      return Promise.reject(error);
-    }
     return Promise.reject(error);
   }
 );
 
 export default api;
 
-// Auth API
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data, config) => api.post('/auth/login', data, config),
@@ -82,7 +68,6 @@ export const authAPI = {
   resetPassword: (token, password) => api.put(`/auth/reset-password/${token}`, { password }),
 };
 
-// Users API
 export const usersAPI = {
   getProfile: (id) => api.get(`/users/${id}`),
   getPublicProfile: (id) => api.get(`/users/${id}/public`),
@@ -90,7 +75,6 @@ export const usersAPI = {
   getNearby: (data) => api.post('/users/nearby', data),
 };
 
-// Products API
 export const productsAPI = {
   getAll: (params) => api.get('/products', { params }),
   getOne: (id) => api.get(`/products/${id}`),
@@ -102,7 +86,6 @@ export const productsAPI = {
   getMy: (params) => api.get('/products/my', { params }),
 };
 
-// Services API
 export const servicesAPI = {
   getAll: (params) => api.get('/services', { params }),
   getOne: (id) => api.get(`/services/${id}`),
@@ -112,12 +95,10 @@ export const servicesAPI = {
   getMy: (params) => api.get('/services/my', { params }),
 };
 
-// Bookings API
 export const nearbyAPI = {
   getNearby: (params) => api.get('/listings/nearby', { params }),
 };
 
-// Bookings API
 export const bookingsAPI = {
   create: (data) => api.post('/bookings', data),
   getMy: (params) => api.get('/bookings/my', { params }),
@@ -126,7 +107,6 @@ export const bookingsAPI = {
   updateStatus: (id, status) => api.put(`/bookings/${id}/status`, { status }),
 };
 
-// Reviews API
 export const reviewsAPI = {
   create: (data) => api.post('/reviews', data),
   getProductReviews: (productId) => api.get(`/reviews/product/${productId}`),
@@ -134,27 +114,23 @@ export const reviewsAPI = {
   getUserReviews: (userId) => api.get(`/reviews/user/${userId}`),
 };
 
-// Reports API
 export const reportsAPI = {
   create: (data) => api.post('/reports', data),
   getContentReports: (contentType, contentId) => api.get(`/reports/content/${contentType}/${contentId}`),
 };
 
-// Messages API
 export const messagesAPI = {
   getConversations: () => api.get('/messages/conversations'),
   getMessages: (roomId) => api.get('/messages', { params: { roomId } }),
   send: (data) => api.post('/messages', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
-// Notifications API
 export const notificationsAPI = {
   getAll: () => api.get('/notifications'),
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
   markAllAsRead: () => api.put('/notifications/read-all'),
 };
 
-// Admin API
 export const adminAPI = {
   getDashboardStats: () => api.get('/admin/dashboard/stats'),
   getRecentActivity: () => api.get('/admin/dashboard/activity'),
