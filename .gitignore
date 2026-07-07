@@ -1,0 +1,79 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.example
+
+# Build output
+dist/
+build/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Misc
+*.tsbuildinfo
+.coverage/
+.nyc_output/
+coverage/
+
+# Client
+client/dist/
+client/.vite/
+client/.env
+client/.env.local
+client/.env.*.local
+
+# Server
+server/.env
+server/.env.local
+server/.env.*.local
+server/coverage/
+
+# Vercel
+.vercel/
+
+# SSL / Keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Testing
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Misc
+*.tgz
+*.tar.gz
+*.zip
+*.rar
