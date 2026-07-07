@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="#">
-    <img src="https://img.shields.io/badge/🚀_Live_Demo-markiit.vercel.app-00C27A?style=for-the-badge&labelColor=080E0D" alt="Live Demo">
+    <img src="https://img.shields.io/badge/🚀_Live_Demo-markiitapp.vercel.app-00C27A?style=for-the-badge&labelColor=080E0D" alt="Live Demo">
   </a>
 </p>
 
