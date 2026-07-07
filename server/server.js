@@ -33,6 +33,22 @@ cloudinary.config({
 const app = express();
 const isVercel = process.env.VERCEL === '1';
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://markiitapp.vercel.app'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 const dbMiddleware = async (req, res, next) => {
   try {
     await connectDB();
@@ -43,25 +59,9 @@ const dbMiddleware = async (req, res, next) => {
 };
 
 app.use(dbMiddleware);
-
-app.set('io', null);
-
-if (!isVercel) {
-  const server = createServer(app);
-  const io = new Server(server, {
-    cors: { origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true },
-  });
-  io.on('connection', (socket) => {
-    socket.on('join', (userId) => socket.join(`user_${userId}`));
-  });
-  app.set('io', io);
-  app.listen(process.env.PORT || 5000);
-}
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173', credentials: true }));
 
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 10 }), authRoutes);
 app.use('/api/users', rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }), userRoutes);
