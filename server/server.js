@@ -31,6 +31,9 @@ cloudinary.config({
 });
 
 const app = express();
+
+app.set('trust proxy', 1);
+
 const isVercel = process.env.VERCEL === '1';
 
 const allowedOrigins = [
