@@ -16,14 +16,18 @@ export const protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id);
+    
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
+    
     if (req.user.isActive === false) {
       return res.status(403).json({ success: false, message: 'Your account has been restricted. Please contact support for more information.' });
     }
+    
     next();
   } catch (error) {
+    console.error("JWT Verification failed:", error.message);
     return res.status(401).json({ success: false, message: 'Token invalid or expired' });
   }
 };
